@@ -1,98 +1,223 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Job Aggregator Services
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A TypeScript/NestJS backend for collecting, storing, searching, and managing job listings. The application is organized as a NestJS monorepo with four services:
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- **Scraper service** collects recent job listings from Indeed and LinkedIn via Apify, and from SimplyHired and ZipRecruiter using a browser.
+- **Storage service** persists jobs, users, and saved searches in PostgreSQL.
+- **Search service** provides job search and saved-search endpoints, and supports processing job-alert emails.
+- **User service** provides registration, OTP verification, sign-in, password reset, and contact-form endpoints.
 
-## Description
+The scraper currently targets finance leadership roles in the United States. It filters for recent listings and can enrich saved jobs with company revenue and industry information.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Tech stack
 
-## Project setup
+- Node.js 20
+- TypeScript 5
+- NestJS 11
+- PostgreSQL with TypeORM
+- Puppeteer and Chromium
+- Apify actors for Indeed and LinkedIn scraping
+- Docker and Docker Compose
 
-```bash
-$ yarn install
+## Repository structure
+
+```text
+scraper-service-app/
+├── apps/
+│   ├── scraper-service/
+│   ├── search-service/
+│   ├── storage-service/
+│   └── user-service/
+├── libs/
+│   └── common/
+├── package.json
+└── nest-cli.json
 ```
 
-## Compile and run the project
+## Prerequisites
+
+- Node.js 20
+- Yarn
+- PostgreSQL
+- Chromium and Xvfb for running the scraper outside its Docker image
+- Credentials for the external integrations you plan to use
+
+## Setup
+
+From this directory:
 
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+yarn install --frozen-lockfile
 ```
 
-## Run tests
+Configure the environment variables for the services you intend to run. Do not commit credentials or production secrets.
+
+### Environment variables
+
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `DB_HOST` | Storage | PostgreSQL host or Cloud SQL socket path |
+| `DB_PORT` | Storage | PostgreSQL port; defaults to `5432` |
+| `DB_USER` | Storage | PostgreSQL username |
+| `DB_PASS` | Storage | PostgreSQL password |
+| `DB_NAME` | Storage | PostgreSQL database name |
+| `STORAGE_SERVICE_HOST` | Scraper, search | Base URL of the storage service |
+| `SEARCH_SERVICE_HOST` | Scraper | Base URL of the search service |
+| `DATAIMPULSE_USERNAME` | Scraper | Proxy username |
+| `DATAIMPULSE_PASSWORD` | Scraper | Proxy password |
+| `DATAIMPULSE_PROXY_HOST` | Scraper | Proxy host |
+| `DATAIMPULSE_PROXY_PORT` | Scraper | Proxy port |
+| `INDEED_APIFY_API_TOKEN` | Scraper | Apify token for the Indeed actor |
+| `INDEED_ACTOR_ID` | Scraper | Apify Indeed actor ID |
+| `LINKEDIN_APIFY_API_TOKEN` | Scraper | Apify token for the LinkedIn actor |
+| `LINKEDIN_ACTOR_ID` | Scraper | Apify LinkedIn actor ID |
+| `SERPER_API_KEY` | Scraper | Serper API key for company revenue lookup |
+| `SMTP_HOST` | Search, user | SMTP server hostname |
+| `SMTP_PORT` | Search, user | SMTP server port |
+| `SMTP_USER` | Search, user | SMTP username |
+| `SMTP_PASSWORD` | Search, user | SMTP password |
+| `SMTP_FROM_NAME` | Search, user | Sender display name; defaults to `No Reply` |
+| `SMTP_FROM_EMAIL` | Search, user | Sender email address |
+| `JWT_SECRET` | User | Secret used to sign JWTs |
+| `JWT_ACCESS_EXPIRES_IN` | User | Access-token lifetime; defaults to `15m` |
+| `CACHE_TTL` | User | Cache lifetime |
+| `CACHE_MAX_ITEMS` | User | Maximum cache items |
+| `JOB_RETENTION_DAYS` | Scraper | Job retention period; defaults to `60` |
+| `NODE_ENV` | Storage, scraper, user | Runtime environment |
+| `PORT` | Storage | Listening port; defaults to `3003` |
+
+The scraper also uses Chromium environment settings in Docker: `PUPPETEER_EXECUTABLE_PATH`, `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD`, `CHROME_PATH`, `DISPLAY`, and `XVFB_WHD`.
+
+Apify credentials and proxy settings are needed for their corresponding scraping integrations. If an Apify token is not configured, that source is skipped. Company revenue lookup is skipped when `SERPER_API_KEY` is not configured.
+
+## Run locally
+
+The package scripts are defined in `package.json`:
 
 ```bash
-# unit tests
-$ yarn run test
+# Start the configured Nest application
+yarn start
 
-# e2e tests
-$ yarn run test:e2e
+# Start in watch mode
+yarn start:dev
 
-# test coverage
-$ yarn run test:cov
+# Start in debug/watch mode
+yarn start:debug
+
+# Build
+yarn build
+
+# Run in production mode
+yarn start:prod
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+This is a monorepo with separate Nest applications. To start a particular application, pass its project name to the relevant Nest command, for example:
 
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+yarn start:dev scraper-service
+yarn start:dev search-service
+yarn start:dev storage-service
+yarn start:dev user-service
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The services use these default ports in the provided Compose configuration:
 
-## Resources
+| Service | Port |
+| --- | ---: |
+| Scraper | `3001` |
+| Search | `3002` |
+| Storage | `3003` |
+| User | `3004` |
 
-Check out a few resources that may come in handy when working with NestJS:
+The storage service also honors the `PORT` environment variable.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Run with Docker Compose
 
-## Support
+The repository-root Compose file builds all four services. From the repository root:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+docker compose -f docker-compose.app.yml up --build
+```
 
-## Stay in touch
+Configure database, SMTP, authentication, and scraping credentials before using the services. Review the Compose file’s service URLs and environment settings to ensure they point to the intended dependencies.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+The scraper container includes Chromium and Xvfb. It may need more shared memory and memory than the API services.
 
-## License
+## HTTP endpoints
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+These are the main routes implemented by the controllers. The service base URL and port depend on your runtime configuration.
+
+### Scraper service
+
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/scrape-manual` | Manually start a scrape |
+| `POST` | `/scrape` | Start a scrape; requires the `X-CloudScheduler` header |
+| `POST` | `/get-company-revenue` | Look up revenue for the `companyName` in the request body |
+| `POST` | `/get-company-industry-info` | Look up industry information for the `companyName` in the request body |
+
+Example request:
+
+```bash
+curl -X POST http://localhost:3001/get-company-revenue \
+  -H "Content-Type: application/json" \
+  -d '{"companyName":"Example Company"}'
+```
+
+### Search service
+
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/jobs` | Search jobs. Supports filters such as `search`, `company`, `title`, `keyword`, `location`, `datePosted`, `sort`, `revenue`, and `industry`, plus pagination. |
+| `POST` | `/jobs/save-searches` | Save a search |
+| `GET` | `/jobs/fetch-user-searches/:userId` | Fetch a user's saved searches |
+| `PUT` | `/jobs/update-search-alert` | Enable or disable a saved-search alert |
+| `POST` | `/jobs/process-new-jobs-alert` | Process new jobs for alerts |
+
+### Storage service
+
+The storage service exposes job search and persistence routes under `/jobs`, including:
+
+- `GET /jobs` — search stored jobs
+- `POST /jobs/save` — save or update a job
+- `GET /jobs/new` — fetch new jobs
+- `POST /jobs/cleanup?days=<number>` — remove older jobs; defaults to 60 days
+- `POST /jobs/searches` and `GET /jobs/searches?userId=<id>` — manage saved searches
+
+It also provides user and OTP routes used by the user service.
+
+### User service
+
+Authentication and account routes are under `/auth`, including registration, OTP verification, sign-in, fetching the authenticated user, and password reset. The user service serves Swagger documentation at:
+
+```text
+http://localhost:3004/api
+```
+
+## Tests and code quality
+
+```bash
+# Unit tests
+yarn test
+
+# Watch tests
+yarn test:watch
+
+# Coverage
+yarn test:cov
+
+# End-to-end tests
+yarn test:e2e
+
+# Lint TypeScript files
+yarn lint
+
+# Format application and library TypeScript files
+yarn format
+```
+
+## Notes
+
+- PostgreSQL schema synchronization is enabled outside production by the current storage configuration. Use a deliberate migration strategy for production deployments.
+- Scraping behavior and available data depend on the source sites and configured third-party integrations. Follow the relevant sites’ terms and applicable laws.
+- Never commit API tokens, passwords, database credentials, or JWT secrets.
