@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Your Verification Code</title>
+  <style>
+    .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+    .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+    .content { padding: 30px; background-color: #ffffff; }
+    .otp-code { 
+      font-size: 32px; 
+      letter-spacing: 5px; 
+      text-align: center; 
+      margin: 25px 0; 
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .footer { 
+      padding: 20px; 
+      text-align: center; 
+      font-size: 12px; 
+      color: #7f8c8d; 
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Your Verification Code</h2>
+    </div>
+    <div class="content">
+      <p>Hello,</p>
+      <p>Please use the following verification code to complete your registration:</p>
+      
+      <div class="otp-code">{{otp}}</div>
+      
+      <p>This code will expire in {{expiryMinutes}} minutes. If you didn't request this code, please ignore this email.</p>
+    </div>
+    <div class="footer">
+      <p>© 2025 BuyerSignals. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

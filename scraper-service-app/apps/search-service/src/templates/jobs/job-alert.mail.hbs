@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Jobs Matching Your Search</title>
+    <style type="text/css">
+        /* Base styles */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #ffffff;
+        }
+        .header {
+            background-color: #1a73e8;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 4px 4px 0 0;
+        }
+        .job-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: #ffffff;
+        }
+        .job-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a73e8;
+            margin-bottom: 8px;
+        }
+        .company-name {
+            font-weight: 500;
+            color: #5f6368;
+        }
+        .job-meta {
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .meta-icon {
+            margin-right: 8px;
+            color: #5f6368;
+        }
+        .apply-button {
+            display: inline-block;
+            background-color: #1a73e8;
+            color: white !important;
+            padding: 10px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #5f6368;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 20px;
+        }
+        .unsubscribe-link {
+            color: #5f6368;
+            text-decoration: underline;
+        }
+        /* Responsive styles */
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100%;
+                padding: 10px;
+            }
+            .job-card {
+                padding: 12px;
+            }
+            .job-title {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>New Jobs Matching Your Search</h1>
+            <p>We found {{matches.length}} new {{pluralize "job" matches.length}} that match your saved criteria</p>
+        </div>
+
+        {{#each matches}}
+        <div class="job-card">
+            <h2 class="job-title">{{this.job.title}}</h2>
+            <div class="company-name">{{this.job.company}}</div>
+            
+            <div class="job-meta">
+                {{#if this.job.location}}
+                <div class="meta-item">
+                    <span class="meta-icon">📍</span>
+                    <span>{{this.job.location}}</span>
+                </div>
+                {{/if}}
+                
+                {{#if this.job.salary}}
+                <div class="meta-item">
+                    <span class="meta-icon">💰</span>
+                    <span>{{this.job.salary}}</span>
+                </div>
+                {{/if}}
+                
+                {{#if this.job.postedDate}}
+                <div class="meta-item">
+                    <span class="meta-icon">⏰</span>
+                    <span>Posted {{formatDate this.job.postedDate}}</span>
+                </div>
+                {{/if}}
+                
+            </div>
+            
+            {{#if this.job.description}}
+            <div class="job-description">
+                <p>{{truncate this.job.description 200}}</p>
+            </div>
+            {{/if}}
+            
+            <a href="{{this.job.applyUrl}}" class="apply-button">View Job</a>
+        </div>
+        {{/each}}
+
+        <div class="footer">
+            <p>You're receiving this email because you have saved search criteria for "{{searchCriteria}}"</p>
+            <p>
+                <a href="{{unsubscribeLink}}" class="unsubscribe-link">Unsubscribe from these alerts</a> | 
+                <a href="{{managePreferencesLink}}">Manage your preferences</a>
+            </p>
+            <p>© {{currentYear}} Your Buyersignals. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

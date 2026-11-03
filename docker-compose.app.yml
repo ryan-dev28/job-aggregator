@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:  
+  scraper-service:
+    build:
+      context: ./scraper-service-app
+      dockerfile: ./apps/scraper-service/Dockerfile
+    environment:
+      - DISPLAY=:99
+      - XVFB_WHD=1280x720x16
+      - STORAGE_SERVICE_HOST=https://storage-service-840115281701.us-central1.run.app
+      - SEARCH_SERVICE_HOST=https://search-service-840115281701.us-central1.run.app
+    shm_size: '512m'
+    mem_limit: '2g'
+    restart: unless-stopped
+    privileged: false
+    volumes:
+      - /tmp/chrome-sandbox:/tmp/chrome-sandbox
+    ports:
+      - "3001:3001"
+
+  search-service:
+    build:
+      context: ./scraper-service-app
+      dockerfile: ./apps/search-service/Dockerfile
+    ports:
+      - "3002:3002"
+
+  storage-service:
+    build:
+      context: ./scraper-service-app
+      dockerfile: ./apps/storage-service/Dockerfile
+    ports:
+      - "3003:3003"
+
+  user-service:
+    build:
+      context: ./scraper-service-app
+      dockerfile: ./apps/user-service/Dockerfile
+    ports:
+      - "3004:3004"
+
